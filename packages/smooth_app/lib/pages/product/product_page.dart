@@ -15,31 +15,34 @@ import 'package:openfoodfacts/model/Product.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
-import 'package:smooth_app/bottom_sheet_views/product_copy_view.dart';
+import 'package:smooth_app/data_models/product_list.dart';
 import 'package:smooth_app/data_models/product_preferences.dart';
+import 'package:smooth_app/database/dao_product_extra.dart';
 import 'package:smooth_ui_library/widgets/smooth_card.dart';
 
 // Project imports:
 import 'package:smooth_app/pages/user_preferences_page.dart';
 import 'package:smooth_app/cards/data_cards/image_upload_card.dart';
 import 'package:smooth_app/cards/expandables/attribute_list_expandable.dart';
-import 'package:smooth_app/data_models/product_list.dart';
 import 'package:smooth_app/database/category_product_query.dart';
 import 'package:smooth_app/database/dao_product_list.dart';
 import 'package:smooth_app/database/local_database.dart';
 import 'package:smooth_app/database/product_query.dart';
 import 'package:smooth_app/functions/launchURL.dart';
+import 'package:smooth_app/data_models/product_extra.dart';
 import 'package:smooth_app/pages/product/common/product_dialog_helper.dart';
 import 'package:smooth_app/pages/product/common/product_query_page_helper.dart';
 import 'package:smooth_app/themes/constant_icons.dart';
 import 'package:smooth_app/themes/smooth_theme.dart';
 import 'package:smooth_app/pages/product_copy_helper.dart';
-import 'package:smooth_app/data_models/pantry.dart';
 import 'package:smooth_app/data_models/user_preferences.dart';
 import 'package:smooth_app/database/dao_product.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({@required this.product, this.newProduct = false});
+  const ProductPage({
+    required this.product,
+    this.newProduct = false,
+  });
 
   final bool newProduct;
   final Product product;
@@ -49,17 +52,17 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  Product _product;
+  late Product _product;
+  bool _first = true;
 
-  final EdgeInsets padding =
-      const EdgeInsets.only(right: 8.0, left: 8.0, top: 4.0, bottom: 20.0);
+  final EdgeInsets padding = const EdgeInsets.only(
+    right: 8.0,
+    left: 8.0,
+    top: 4.0,
+    bottom: 20.0,
+  );
+
   final EdgeInsets insets = const EdgeInsets.all(12.0);
-
-  @override
-  void initState() {
-    super.initState();
-    _updateHistory(context);
-  }
 
   static const List<String> _ORDERED_ATTRIBUTE_GROUP_IDS = <String>[
     AttributeGroup.ATTRIBUTE_GROUP_INGREDIENT_ANALYSIS,
@@ -71,83 +74,87 @@ class _ProductPageState extends State<ProductPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _updateHistory(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final LocalDatabase localDatabase = context.watch<LocalDatabase>();
-    final AppLocalizations appLocalizations = AppLocalizations.of(context);
-    _product ??= widget.product;
+    final AppLocalizations appLocalizations = AppLocalizations.of(context)!;
+    if (_first) {
+      _first = false;
+      _product = widget.product;
+    }
     return Scaffold(
-        appBar: AppBar(
-          title: Text(_getProductName(appLocalizations)),
-          actions: <Widget>[
-            PopupMenuButton<String>(
-              itemBuilder: (final BuildContext context) =>
-                  <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'web',
-                  child: Text(appLocalizations.label_web),
-                ),
-                PopupMenuItem<String>(
-                  value: 'refresh',
-                  child: Text(appLocalizations.label_refresh),
-                ),
-              ],
-              onSelected: (final String value) async {
-                switch (value) {
-                  case 'web':
-                    Launcher().launchURL(
-                        context,
-                        'https://openfoodfacts.org/product/${_product.barcode}/',
-                        false);
-                    break;
-                  case 'refresh':
-                    final ProductDialogHelper productDialogHelper =
-                        ProductDialogHelper(
-                      barcode: _product.barcode,
-                      context: context,
-                      localDatabase: localDatabase,
-                      refresh: true,
-                    );
-                    final Product product =
-                        await productDialogHelper.openUniqueProductSearch();
-                    if (product == null) {
-                      productDialogHelper.openProductNotFoundDialog();
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(appLocalizations.product_refreshed),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                    setState(() {
-                      _product = product;
-                    });
-                    break;
-                  default:
-                    throw Exception('Unknown value: $value');
-                }
-              },
-            ),
-          ],
-        ),
-        body: widget.newProduct
-            ? _buildNewProductBody(context)
-            : _buildProductBody(context));
+      appBar: AppBar(
+        title: Text(_getProductName(appLocalizations)),
+        actions: <Widget>[
+          PopupMenuButton<String>(
+            itemBuilder: (final BuildContext context) =>
+                <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'web',
+                child: Text(appLocalizations.label_web),
+              ),
+              PopupMenuItem<String>(
+                value: 'refresh',
+                child: Text(appLocalizations.label_refresh),
+              ),
+            ],
+            onSelected: (final String value) async {
+              switch (value) {
+                case 'web':
+                  Launcher().launchURL(
+                      context,
+                      'https://openfoodfacts.org/product/${_product.barcode}/',
+                      false);
+                  break;
+                case 'refresh':
+                  final ProductDialogHelper productDialogHelper =
+                      ProductDialogHelper(
+                    barcode: _product.barcode!,
+                    context: context,
+                    localDatabase: localDatabase,
+                    refresh: true,
+                  );
+                  final Product? product =
+                      await productDialogHelper.openUniqueProductSearch();
+                  if (product == null) {
+                    productDialogHelper.openProductNotFoundDialog();
+                    return;
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(appLocalizations.product_refreshed),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  _product = product;
+                  await _updateHistory(context);
+                  break;
+                default:
+                  throw Exception('Unknown value: $value');
+              }
+            },
+          ),
+        ],
+      ),
+      body: widget.newProduct
+          ? _buildNewProductBody(context)
+          : _buildProductBody(context),
+    );
   }
 
   Future<void> _updateHistory(final BuildContext context) async {
     final LocalDatabase localDatabase = context.read<LocalDatabase>();
-    final DaoProductList daoProductList = DaoProductList(localDatabase);
-    final ProductList productList =
-        ProductList(listType: ProductList.LIST_TYPE_HISTORY, parameters: '');
-    await daoProductList.get(productList);
-    productList.add(_product);
-    await daoProductList.put(productList);
+    await DaoProductExtra(localDatabase).putLastSeen(widget.product);
     localDatabase.notifyListeners();
   }
 
   Widget _buildProductImagesCarousel(BuildContext context) {
-    final AppLocalizations appLocalizations = AppLocalizations.of(context);
+    final AppLocalizations appLocalizations = AppLocalizations.of(context)!;
     final List<ImageUploadCard> carouselItems = <ImageUploadCard>[
       ImageUploadCard(
         product: _product,
@@ -205,37 +212,39 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Widget _buildNewProductBody(BuildContext context) {
-    final AppLocalizations appLocalizations = AppLocalizations.of(context);
-    return ListView(children: <Widget>[
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        margin: const EdgeInsets.only(top: 20.0),
-        child: Text(
-          appLocalizations.add_product,
-          style: Theme.of(context).textTheme.headline1,
+    final AppLocalizations appLocalizations = AppLocalizations.of(context)!;
+    return ListView(
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          margin: const EdgeInsets.only(top: 20.0),
+          child: Text(
+            appLocalizations.add_product,
+            style: Theme.of(context).textTheme.headline1,
+          ),
         ),
-      ),
-      ImageUploadCard(
-        product: _product,
-        imageField: ImageField.FRONT,
-        buttonText: appLocalizations.front_photo,
-      ),
-      ImageUploadCard(
-        product: _product,
-        imageField: ImageField.INGREDIENTS,
-        buttonText: appLocalizations.ingredients_photo,
-      ),
-      ImageUploadCard(
-        product: _product,
-        imageField: ImageField.NUTRITION,
-        buttonText: appLocalizations.nutrition_facts_photo,
-      ),
-      ImageUploadCard(
-        product: _product,
-        imageField: ImageField.OTHER,
-        buttonText: appLocalizations.more_photos,
-      ),
-    ]);
+        ImageUploadCard(
+          product: _product,
+          imageField: ImageField.FRONT,
+          buttonText: appLocalizations.front_photo,
+        ),
+        ImageUploadCard(
+          product: _product,
+          imageField: ImageField.INGREDIENTS,
+          buttonText: appLocalizations.ingredients_photo,
+        ),
+        ImageUploadCard(
+          product: _product,
+          imageField: ImageField.NUTRITION,
+          buttonText: appLocalizations.nutrition_facts_photo,
+        ),
+        ImageUploadCard(
+          product: _product,
+          imageField: ImageField.OTHER,
+          buttonText: appLocalizations.more_photos,
+        ),
+      ],
+    );
   }
 
   Widget _buildProductBody(BuildContext context) {
@@ -243,23 +252,26 @@ class _ProductPageState extends State<ProductPage> {
     final UserPreferences userPreferences = context.watch<UserPreferences>();
     final DaoProductList daoProductList = DaoProductList(localDatabase);
     final DaoProduct daoProduct = DaoProduct(localDatabase);
+    final DaoProductExtra daoProductExtra = DaoProductExtra(localDatabase);
     final ProductPreferences productPreferences =
         context.watch<ProductPreferences>();
-    final AppLocalizations appLocalizations = AppLocalizations.of(context);
+    final AppLocalizations appLocalizations = AppLocalizations.of(context)!;
     final Size screenSize = MediaQuery.of(context).size;
     final ThemeData themeData = Theme.of(context);
     final double iconHeight =
         screenSize.width / 10; // TODO(monsieurtanuki): target size?
     final Map<String, String> attributeGroupLabels = <String, String>{};
-    for (final AttributeGroup attributeGroup
-        in productPreferences.attributeGroups) {
-      attributeGroupLabels[attributeGroup.id] = attributeGroup.name;
-    }
     final List<String> attributeIds =
         productPreferences.getOrderedImportantAttributeIds();
-    final List<Widget> listItems = <Widget>[];
 
-    listItems.add(_buildProductImagesCarousel(context));
+    for (final AttributeGroup attributeGroup
+        in productPreferences.attributeGroups!) {
+      attributeGroupLabels[attributeGroup.id!] = attributeGroup.name!;
+    }
+
+    final List<Widget> listItems = <Widget>[
+      _buildProductImagesCarousel(context),
+    ];
 
     // Brands, quantity
     listItems.add(
@@ -346,7 +358,7 @@ class _ProductPageState extends State<ProductPage> {
 
     for (final AttributeGroup attributeGroup
         in _getOrderedAttributeGroups(productPreferences)) {
-      final Widget grouped =
+      final Widget? grouped =
           _getAttributeGroupWidget(attributeGroup, iconHeight);
       if (grouped != null) {
         listItems.add(grouped);
@@ -354,11 +366,12 @@ class _ProductPageState extends State<ProductPage> {
     }
 
     //Similar foods
-    if (_product.categoriesTags != null && _product.categoriesTags.isNotEmpty) {
-      for (int i = _product.categoriesTags.length - 1;
-          i < _product.categoriesTags.length;
+    if (_product.categoriesTags != null &&
+        _product.categoriesTags!.isNotEmpty) {
+      for (int i = _product.categoriesTags!.length - 1;
+          i < _product.categoriesTags!.length;
           i++) {
-        final String categoryTag = _product.categoriesTags[i];
+        final String categoryTag = _product.categoriesTags![i];
         const MaterialColor materialColor = Colors.blue;
         listItems.add(
           SmoothCard(
@@ -406,16 +419,75 @@ class _ProductPageState extends State<ProductPage> {
       }
     }
 
+    listItems.add(_getTemporaryButton(daoProductExtra));
+
     return ListView(children: listItems);
   }
 
-  Widget _getAttributeGroupWidget(
+  // TODO(monsieurtanuki): remove / improve the display according to the feedbacks
+  Widget _getTemporaryButton(final DaoProductExtra daoProductExtra) =>
+      ElevatedButton(
+        onPressed: () async {
+          final List<Widget> children = <Widget>[];
+          _temporary(
+            await daoProductExtra.getProductExtra(
+              key: DaoProductExtra.EXTRA_ID_LAST_SEEN,
+              barcode: _product.barcode!,
+            ),
+            children,
+            'History of your access:',
+          );
+          _temporary(
+            await daoProductExtra.getProductExtra(
+              key: DaoProductExtra.EXTRA_ID_LAST_SCAN,
+              barcode: _product.barcode!,
+            ),
+            children,
+            'History of your barcode scan:',
+          );
+          _temporary(
+            await daoProductExtra.getProductExtra(
+              key: DaoProductExtra.EXTRA_ID_LAST_REFRESH,
+              barcode: _product.barcode!,
+            ),
+            children,
+            'History of your server refresh:',
+          );
+          await showCupertinoModalBottomSheet<void>(
+            context: context,
+            builder: (final BuildContext context) => ListView(
+              children: children,
+            ),
+          );
+        },
+        child: const Text('History (temporary button)'),
+      );
+
+  void _temporary(
+    final ProductExtra? productExtra,
+    final List<Widget> children,
+    final String title,
+  ) {
+    if (productExtra == null) {
+      return;
+    }
+    final List<int> timestamps = productExtra.decodeStringAsIntList();
+    if (timestamps.isNotEmpty) {
+      children.add(Material(child: Text(title)));
+      for (final int timestamp in timestamps.reversed) {
+        final DateTime dateTime = LocalDatabase.timestampToDateTime(timestamp);
+        children.add(Material(child: Text('* $dateTime')));
+      }
+    }
+  }
+
+  Widget? _getAttributeGroupWidget(
     final AttributeGroup attributeGroup,
     final double iconHeight,
   ) {
     final List<String> attributeIds = <String>[];
-    for (final Attribute attribute in attributeGroup.attributes) {
-      attributeIds.add(attribute.id);
+    for (final Attribute attribute in attributeGroup.attributes!) {
+      attributeIds.add(attribute.id!);
     }
     final List<Attribute> attributes =
         AttributeListExpandable.getPopulatedAttributes(_product, attributeIds);
@@ -428,7 +500,7 @@ class _ProductPageState extends State<ProductPage> {
       product: _product,
       iconHeight: iconHeight,
       attributes: attributes,
-      title: attributeGroup.name,
+      title: attributeGroup.name!,
     );
   }
 
@@ -437,7 +509,7 @@ class _ProductPageState extends State<ProductPage> {
     final List<AttributeGroup> attributeGroups = <AttributeGroup>[];
     for (final String attributeGroupId in _ORDERED_ATTRIBUTE_GROUP_IDS) {
       for (final AttributeGroup attributeGroup
-          in productPreferences.attributeGroups) {
+          in productPreferences.attributeGroups!) {
         if (attributeGroupId == attributeGroup.id) {
           attributeGroups.add(attributeGroup);
         }
@@ -446,7 +518,7 @@ class _ProductPageState extends State<ProductPage> {
 
     /// in case we get new attribute groups but we haven't included them yet
     for (final AttributeGroup attributeGroup
-        in productPreferences.attributeGroups) {
+        in productPreferences.attributeGroups!) {
       if (!_ORDERED_ATTRIBUTE_GROUP_IDS.contains(attributeGroup.id)) {
         attributeGroups.add(attributeGroup);
       }
@@ -455,60 +527,27 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Future<void> _copy({
-    @required final UserPreferences userPreferences,
-    @required final DaoProductList daoProductList,
-    @required final DaoProduct daoProduct,
+    required final UserPreferences userPreferences,
+    required final DaoProductList daoProductList,
+    required final DaoProduct daoProduct,
   }) async {
-    final List<PantryType> pantryTypes = <PantryType>[
-      PantryType.PANTRY,
-      PantryType.SHOPPING,
-    ];
-
-    final Map<PantryType, List<Pantry>> allPantries =
-        <PantryType, List<Pantry>>{};
-
-    for (final PantryType pantryType in pantryTypes) {
-      final List<Pantry> pantries = await Pantry.getAll(
-        userPreferences,
-        daoProduct,
-        pantryType,
-      );
-      allPantries[pantryType] = pantries;
-    }
-
     final ProductCopyHelper productCopyHelper = ProductCopyHelper();
-    final List<Widget> children = await productCopyHelper.getButtons(
+    final ProductList? productList =
+        await productCopyHelper.showProductListDialog(
       context: context,
       daoProductList: daoProductList,
       daoProduct: daoProduct,
-      allPantries: allPantries,
-      userPreferences: userPreferences,
     );
-    if (children.isEmpty) {
-      // no list to add to
-      return;
-    }
-    final dynamic target = await showCupertinoModalBottomSheet<dynamic>(
-      expand: false,
-      context: context,
-      backgroundColor: Colors.transparent,
-      bounce: true,
-      builder: (BuildContext context) => ProductCopyView(
-        children: children,
-      ),
-    );
-    if (target == null) {
+    if (productList == null) {
       // nothing selected
       return;
     }
     final List<Product> products = <Product>[widget.product];
-    productCopyHelper.copy(
+    await productCopyHelper.copy(
       context: context,
-      target: target,
-      allPantries: allPantries,
+      productList: productList,
       daoProductList: daoProductList,
       products: products,
-      userPreferences: userPreferences,
     );
   }
 
@@ -516,10 +555,10 @@ class _ProductPageState extends State<ProductPage> {
       _product.productName ?? appLocalizations.unknownProductName;
 
   Widget _getClickableIcon({
-    @required final String label,
-    @required final Widget icon,
-    @required final Future<void> Function() onTap,
-    @required final double width,
+    required final String label,
+    required final Widget icon,
+    required final Future<void> Function() onTap,
+    required final double width,
   }) =>
       InkWell(
         onTap: onTap,

@@ -15,7 +15,7 @@ abstract class ProductQuery {
   static String getCurrentLanguageCode(final BuildContext context) =>
       Localizations.localeOf(context).languageCode;
 
-  static String getCurrentCountryCode() => window.locale.countryCode;
+  static String getCurrentCountryCode() => window.locale.countryCode ?? '';
 
   static const User SMOOTH_USER = User(
     userId: 'project-smoothie',
@@ -44,10 +44,10 @@ abstract class ProductQuery {
         ProductField.ADDITIVES,
         ProductField.INGREDIENTS_ANALYSIS_TAGS,
         ProductField.LABELS_TAGS,
-        ProductField.LABELS_TAGS_TRANSLATED,
+        ProductField.LABELS_TAGS_IN_LANGUAGES,
         ProductField.ENVIRONMENT_IMPACT_LEVELS,
         ProductField.CATEGORIES_TAGS,
-        ProductField.CATEGORIES_TAGS_TRANSLATED,
+        ProductField.CATEGORIES_TAGS_IN_LANGUAGES,
         ProductField.LANGUAGE,
         ProductField.ATTRIBUTE_GROUPS,
       ];
