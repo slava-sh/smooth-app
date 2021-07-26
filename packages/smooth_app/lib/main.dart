@@ -14,29 +14,32 @@ import 'package:smooth_app/database/local_database.dart';
 import 'package:smooth_app/pages/home_page.dart';
 import 'package:smooth_app/themes/smooth_theme.dart';
 import 'package:smooth_app/themes/theme_provider.dart';
+import 'package:smooth_app/concept/app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Sentry.init(
-    (SentryOptions options) {
-      options.dsn =
-          'https://22ec5d0489534b91ba455462d3736680@o241488.ingest.sentry.io/5376745';
-    },
-  );
-  /* TODO: put back when we have clearer ideas about analytics
-  await MatomoTracker().initialize(
-    siteId: 2,
-    url: 'https://analytics.openfoodfacts.org/',
-  );
-   */
-  try {
-    runApp(const SmoothApp());
-  } catch (exception, stackTrace) {
-    await Sentry.captureException(
-      exception,
-      stackTrace: stackTrace,
-    );
-  }
+  //await Sentry.init(
+  //  (SentryOptions options) {
+  //    options.dsn =
+  //        'https://22ec5d0489534b91ba455462d3736680@o241488.ingest.sentry.io/5376745';
+  //  },
+  //);
+  ///* TODO: put back when we have clearer ideas about analytics
+  //await MatomoTracker().initialize(
+  //  siteId: 2,
+  //  url: 'https://analytics.openfoodfacts.org/',
+  //);
+  // */
+  //try {
+  //  runApp(const SmoothApp());
+  //} catch (exception, stackTrace) {
+  //  await Sentry.captureException(
+  //    exception,
+  //    stackTrace: stackTrace,
+  //  );
+  //}
+  //runApp(const SmoothApp());
+  runApp(const ConceptApp());
 }
 
 class SmoothApp extends StatefulWidget {

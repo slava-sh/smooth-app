@@ -17,11 +17,14 @@ enum ScannedProductState {
   CACHED,
 }
 
+typedef ScanCallback = void Function(String barcode);
+
 class ContinuousScanModel with ChangeNotifier {
   ContinuousScanModel({
     required bool contributionMode,
     required this.countryCode,
     required this.languageCode,
+    this.scanCallback,
   }) : _contributionMode = contributionMode;
 
   final Map<String, ScannedProductState> _states =
@@ -39,6 +42,7 @@ class ContinuousScanModel with ChangeNotifier {
   late DaoProductExtra _daoProductExtra;
   final String languageCode;
   final String countryCode;
+  ScanCallback? scanCallback;
 
   bool get isNotEmpty => getBarcodes().isNotEmpty;
   bool get contributionMode => _contributionMode;
@@ -79,13 +83,18 @@ class ContinuousScanModel with ChangeNotifier {
 
   Product getProduct(final String barcode) => _productList.getProduct(barcode);
 
-  void setupScanner(QRViewController controller) => controller.scannedDataStream
-      .listen((Barcode barcode) => onScan(barcode.code));
+  void setupScanner(QRViewController controller) {
+    controller.scannedDataStream
+        .listen((Barcode barcode) => onScan(barcode.code));
+  }
 
   Future<void> onScan(final String code) async {
     if (_barcodeTrustCheck != code) {
       _barcodeTrustCheck = code;
       return;
+    }
+    if (scanCallback != null) {
+      scanCallback!(code);
     }
     if (_latestScannedBarcode == code) {
       return;
@@ -141,7 +150,7 @@ class ContinuousScanModel with ChangeNotifier {
     return false;
   }
 
-  Future<Product?> _queryBarcode(
+  Future<Product?> queryBarcode(
     final String barcode,
   ) async =>
       BarcodeProductQuery(
@@ -154,7 +163,7 @@ class ContinuousScanModel with ChangeNotifier {
   Future<void> _loadBarcode(
     final String barcode,
   ) async {
-    final Product? product = await _queryBarcode(barcode);
+    final Product? product = await queryBarcode(barcode);
     if (product != null) {
       _addProduct(product, ScannedProductState.FOUND);
     } else {
@@ -165,7 +174,7 @@ class ContinuousScanModel with ChangeNotifier {
   Future<void> _updateBarcode(
     final String barcode,
   ) async {
-    final Product? product = await _queryBarcode(barcode);
+    final Product? product = await queryBarcode(barcode);
     if (product != null) {
       _addProduct(product, ScannedProductState.FOUND);
     }

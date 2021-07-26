@@ -14,9 +14,12 @@ import 'package:smooth_app/pages/product/common/product_query_page_helper.dart';
 import 'package:smooth_app/themes/smooth_theme.dart';
 
 class ProductListPage extends StatefulWidget {
-  const ProductListPage(this.productList);
+  const ProductListPage(this.productList,
+      {this.showAppBar = true, this.showActionButton = true});
 
   final ProductList productList;
+  final bool showAppBar;
+  final bool showActionButton;
 
   @override
   State<ProductListPage> createState() => _ProductListPageState();
@@ -35,6 +38,7 @@ class _ProductListPageState extends State<ProductListPage> {
     if (first) {
       first = false;
       productList = widget.productList;
+      daoProductList.get(productList).then((_) => setState(() {}));
     }
     final List<Product> products = productList.getList();
     final Map<String, ProductExtra> productExtras = productList.productExtras;
@@ -86,90 +90,92 @@ class _ProductListPageState extends State<ProductListPage> {
         throw Exception('unknown list type ${productList.listType}');
     }
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: SmoothTheme.getColor(
-          colorScheme,
-          productList.getMaterialColor(),
-          ColorDestination.APP_BAR_BACKGROUND,
-        ),
-        title: Row(
-          children: <Widget>[
-            productList.getIcon(
-              colorScheme,
-              ColorDestination.APP_BAR_FOREGROUND,
-            ),
-            const SizedBox(width: 8.0),
-            Flexible(
-              child: Text(
-                ProductQueryPageHelper.getProductListLabel(
-                  productList,
-                  context,
-                  verbose: false,
-                ),
-                overflow: TextOverflow.fade,
+      appBar: !widget.showAppBar
+          ? null
+          : AppBar(
+              backgroundColor: SmoothTheme.getColor(
+                colorScheme,
+                productList.getMaterialColor(),
+                ColorDestination.APP_BAR_BACKGROUND,
               ),
-            ),
-          ],
-        ),
-        actions: (!renamable) && (!deletable)
-            ? null
-            : <Widget>[
-                PopupMenuButton<String>(
-                  itemBuilder: (final BuildContext context) =>
-                      <PopupMenuEntry<String>>[
-                    if (renamable)
-                      PopupMenuItem<String>(
-                        value: 'rename',
-                        child: Text(appLocalizations.rename),
-                        enabled: true,
+              title: Row(
+                children: <Widget>[
+                  productList.getIcon(
+                    colorScheme,
+                    ColorDestination.APP_BAR_FOREGROUND,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Flexible(
+                    child: Text(
+                      ProductQueryPageHelper.getProductListLabel(
+                        productList,
+                        context,
+                        verbose: false,
                       ),
-                    PopupMenuItem<String>(
-                      value: 'change',
-                      child: Text(appLocalizations.change_icon),
-                      enabled: true,
+                      overflow: TextOverflow.fade,
                     ),
-                    if (deletable)
-                      PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Text(appLocalizations.delete),
-                        enabled: true,
+                  ),
+                ],
+              ),
+              actions: (!renamable) && (!deletable)
+                  ? null
+                  : <Widget>[
+                      PopupMenuButton<String>(
+                        itemBuilder: (final BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                          if (renamable)
+                            PopupMenuItem<String>(
+                              value: 'rename',
+                              child: Text(appLocalizations.rename),
+                              enabled: true,
+                            ),
+                          PopupMenuItem<String>(
+                            value: 'change',
+                            child: Text(appLocalizations.change_icon),
+                            enabled: true,
+                          ),
+                          if (deletable)
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Text(appLocalizations.delete),
+                              enabled: true,
+                            ),
+                        ],
+                        onSelected: (final String value) async {
+                          switch (value) {
+                            case 'rename':
+                              final ProductList? renamedProductList =
+                                  await ProductListDialogHelper.openRename(
+                                      context, daoProductList, productList);
+                              if (renamedProductList == null) {
+                                return;
+                              }
+                              productList = renamedProductList;
+                              localDatabase.notifyListeners();
+                              break;
+                            case 'delete':
+                              if (await ProductListDialogHelper.openDelete(
+                                  context, daoProductList, productList)) {
+                                Navigator.pop(context);
+                                localDatabase.notifyListeners();
+                              }
+                              break;
+                            case 'change':
+                              final bool changed =
+                                  await ProductListDialogHelper.openChangeIcon(
+                                      context, daoProductList, productList);
+                              if (changed) {
+                                localDatabase.notifyListeners();
+                              }
+                              break;
+                            default:
+                              throw Exception('Unknown value: $value');
+                          }
+                        },
                       ),
-                  ],
-                  onSelected: (final String value) async {
-                    switch (value) {
-                      case 'rename':
-                        final ProductList? renamedProductList =
-                            await ProductListDialogHelper.openRename(
-                                context, daoProductList, productList);
-                        if (renamedProductList == null) {
-                          return;
-                        }
-                        productList = renamedProductList;
-                        localDatabase.notifyListeners();
-                        break;
-                      case 'delete':
-                        if (await ProductListDialogHelper.openDelete(
-                            context, daoProductList, productList)) {
-                          Navigator.pop(context);
-                          localDatabase.notifyListeners();
-                        }
-                        break;
-                      case 'change':
-                        final bool changed =
-                            await ProductListDialogHelper.openChangeIcon(
-                                context, daoProductList, productList);
-                        if (changed) {
-                          localDatabase.notifyListeners();
-                        }
-                        break;
-                      default:
-                        throw Exception('Unknown value: $value');
-                    }
-                  },
-                ),
-              ],
-      ),
-      floatingActionButton: metas.isEmpty
+                    ],
+            ),
+      floatingActionButton: !widget.showActionButton || metas.isEmpty
           ? null
           : FloatingActionButton(
               child: SvgPicture.asset(
