@@ -1,0 +1,93 @@
+PODS:
+  - fk_user_agent (2.0.0):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_keyboard_visibility (0.0.1):
+    - Flutter
+  - FMDB (2.7.5):
+    - FMDB/standard (= 2.7.5)
+  - FMDB/standard (2.7.5)
+  - image_cropper (0.0.4):
+    - Flutter
+    - TOCropViewController (~> 2.6.0)
+  - image_picker (0.0.1):
+    - Flutter
+  - MTBBarcodeScanner (5.0.11)
+  - package_info (0.0.1):
+    - Flutter
+  - qr_code_scanner (0.2.0):
+    - Flutter
+    - MTBBarcodeScanner
+  - share (0.0.1):
+    - Flutter
+  - shared_preferences (0.0.1):
+    - Flutter
+  - sqflite (0.0.2):
+    - Flutter
+    - FMDB (>= 2.7.5)
+  - TOCropViewController (2.6.0)
+  - url_launcher (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - fk_user_agent (from `.symlinks/plugins/fk_user_agent/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
+  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - package_info (from `.symlinks/plugins/package_info/ios`)
+  - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
+  - share (from `.symlinks/plugins/share/ios`)
+  - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
+  - sqflite (from `.symlinks/plugins/sqflite/ios`)
+  - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+
+SPEC REPOS:
+  trunk:
+    - FMDB
+    - MTBBarcodeScanner
+    - TOCropViewController
+
+EXTERNAL SOURCES:
+  fk_user_agent:
+    :path: ".symlinks/plugins/fk_user_agent/ios"
+  Flutter:
+    :path: Flutter
+  flutter_keyboard_visibility:
+    :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  image_cropper:
+    :path: ".symlinks/plugins/image_cropper/ios"
+  image_picker:
+    :path: ".symlinks/plugins/image_picker/ios"
+  package_info:
+    :path: ".symlinks/plugins/package_info/ios"
+  qr_code_scanner:
+    :path: ".symlinks/plugins/qr_code_scanner/ios"
+  share:
+    :path: ".symlinks/plugins/share/ios"
+  shared_preferences:
+    :path: ".symlinks/plugins/shared_preferences/ios"
+  sqflite:
+    :path: ".symlinks/plugins/sqflite/ios"
+  url_launcher:
+    :path: ".symlinks/plugins/url_launcher/ios"
+
+SPEC CHECKSUMS:
+  fk_user_agent: 1f47ec39291e8372b1d692b50084b0d54103c545
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
+  FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
+  image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
+  image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
+  MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
+  package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
+  qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
+  share: 0b2c3e82132f5888bccca3351c504d0003b3b410
+  shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
+  sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
+  TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
+  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+
+PODFILE CHECKSUM: a75497545d4391e2d394c3668e20cfb1c2bbd4aa
+
+COCOAPODS: 1.10.1
