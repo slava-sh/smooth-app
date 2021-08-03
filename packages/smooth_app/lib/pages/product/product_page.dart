@@ -11,6 +11,7 @@ import 'package:openfoodfacts/model/Product.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
+import 'package:smooth_app/cards/data_cards/attribute_chip.dart';
 import 'package:smooth_app/cards/data_cards/image_upload_card.dart';
 import 'package:smooth_app/cards/expandables/attribute_list_expandable.dart';
 import 'package:smooth_app/data_models/product_extra.dart';
@@ -415,7 +416,76 @@ class _ProductPageState extends State<ProductPage> {
 
     listItems.add(_getTemporaryButton(daoProductExtra));
 
-    return ListView(children: listItems);
+    final Widget legacyPage = ListView(children: listItems);
+
+    final Product product = _product;
+
+    final Widget image = Container(
+      constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
+      child: ImageUploadCard(
+        product: product,
+        imageField: ImageField.FRONT,
+        imageUrl: product.imageFrontUrl,
+        title: appLocalizations.product,
+        buttonText: appLocalizations.front_photo,
+      ),
+    );
+
+    final Widget text = Expanded(
+      child: Column(
+        children: <Widget>[
+          Text(_getProductName(appLocalizations)),
+          Text(product.brands ?? appLocalizations.unknownBrand),
+          Text(product.quantity != null ? product.quantity! : ''),
+        ],
+      ),
+    );
+
+    final Widget icons = Container(
+      constraints: const BoxConstraints(maxWidth: 100, maxHeight: 100),
+      child: GridView.count(
+        crossAxisCount: 2,
+        children: product.attributeGroups!
+            // TODO(slava-sh): Decide which icons to show.
+            .where((AttributeGroup ag) => ag.id == 'allergens')
+            .first
+            .attributes!
+            .take(4)
+            .map((Attribute attr) => AttributeChip(
+                  attr,
+                  height: 100, // Ignored?
+                ))
+            .toList(),
+      ),
+    );
+
+    final Widget tabs = DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          flexibleSpace: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'Overview'),
+              Tab(text: 'Legacy Page'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            Icon(Icons.directions_car),
+            legacyPage,
+          ],
+        ),
+      ),
+    );
+
+    return Column(
+      children: <Widget>[
+        Row(children: <Widget>[image, text, icons]),
+        Expanded(child: tabs),
+      ],
+    );
   }
 
   // TODO(monsieurtanuki): remove / improve the display according to the feedbacks
