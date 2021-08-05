@@ -84,7 +84,6 @@ class _ProductPageState extends State<ProductPage> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getProductName(appLocalizations)),
         actions: <Widget>[
           PopupMenuButton<String>(
             itemBuilder: (final BuildContext context) =>
@@ -447,8 +446,8 @@ class _ProductPageState extends State<ProductPage> {
         crossAxisCount: 2,
         children: product.attributeGroups!
             // TODO(slava-sh): Decide which icons to show.
-            .where((AttributeGroup ag) => ag.id == 'allergens')
-            .first
+            .firstWhere((AttributeGroup ag) =>
+                ag.id == AttributeGroup.ATTRIBUTE_GROUP_ALLERGENS)
             .attributes!
             .take(4)
             .map((Attribute attr) => AttributeChip(
@@ -457,6 +456,84 @@ class _ProductPageState extends State<ProductPage> {
                 ))
             .toList(),
       ),
+    );
+
+    Widget buildScoreRow(String attributeGroupId, String attributeId) {
+      final Attribute attribute = product.attributeGroups!
+          .firstWhere((AttributeGroup x) => x.id == attributeGroupId)
+          .attributes!
+          .firstWhere((Attribute x) => x.id == attributeId);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        child: Row(
+          children: <Widget>[
+            AttributeChip(attribute, height: 60),
+            Text(attribute.descriptionShort!),
+          ],
+        ),
+      );
+    }
+
+    Widget buildTextRow(String text) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        child: Text(text),
+      );
+    }
+
+    final Widget nutriScore = buildScoreRow(
+      AttributeGroup.ATTRIBUTE_GROUP_NUTRITIONAL_QUALITY,
+      Attribute.ATTRIBUTE_NUTRISCORE,
+    );
+
+    final Widget highQuantities =
+        buildTextRow('High quantities of fat, saturated fat and sugars');
+
+    final Widget novaScore = buildScoreRow(
+      AttributeGroup.ATTRIBUTE_GROUP_PROCESSING,
+      Attribute.ATTRIBUTE_NOVA,
+    );
+
+    // TODO
+    final Widget ecoScore = Container();
+    //buildScoreRow(
+    //  AttributeGroup.ATTRIBUTE_GROUP_INGREDIENT_ANALYSIS,
+    //  Attribute.ATTRIBUTE_ECOSCORE,
+    //);
+
+    final Widget veganAndPalmOil =
+        buildTextRow('Non-vegan and contains palm oil');
+
+    final Widget allergens = buildTextRow('Allergens: Milk, Nuts, Soybeans');
+
+    final Widget map = Stack(
+      children: <Widget>[
+        Container(
+          height: 200,
+          color: Colors.grey,
+        ),
+        Positioned.fill(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: const <Widget>[
+              Text('map', style: TextStyle(fontSize: 40))
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final Widget overview = ListView(
+      children: <Widget>[
+        nutriScore,
+        highQuantities,
+        novaScore,
+        ecoScore,
+        veganAndPalmOil,
+        allergens,
+        map,
+      ],
     );
 
     final Widget tabs = DefaultTabController(
@@ -473,7 +550,7 @@ class _ProductPageState extends State<ProductPage> {
         ),
         body: TabBarView(
           children: <Widget>[
-            Icon(Icons.directions_car),
+            overview,
             legacyPage,
           ],
         ),
