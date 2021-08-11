@@ -446,7 +446,7 @@ class _ProductPageState extends State<ProductPage> {
         crossAxisCount: 2,
         children: product.attributeGroups!
             // TODO(slava-sh): Decide which icons to show.
-            .firstWhere((AttributeGroup ag) =>
+            .singleWhere((AttributeGroup ag) =>
                 ag.id == AttributeGroup.ATTRIBUTE_GROUP_ALLERGENS)
             .attributes!
             .take(4)
@@ -460,9 +460,9 @@ class _ProductPageState extends State<ProductPage> {
 
     Widget buildScoreRow(String attributeGroupId, String attributeId) {
       final Attribute attribute = product.attributeGroups!
-          .firstWhere((AttributeGroup x) => x.id == attributeGroupId)
+          .singleWhere((AttributeGroup x) => x.id == attributeGroupId)
           .attributes!
-          .firstWhere((Attribute x) => x.id == attributeId);
+          .singleWhere((Attribute x) => x.id == attributeId);
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
         child: Row(
