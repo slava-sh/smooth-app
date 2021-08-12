@@ -15,11 +15,11 @@ import 'package:smooth_app/pages/product/common/product_list_button.dart';
 import 'package:smooth_app/pages/product/common/product_list_dialog_helper.dart';
 import 'package:smooth_app/pages/product/common/product_list_page.dart';
 import 'package:smooth_app/pages/scan/scan_page.dart';
+import 'package:smooth_app/pages/settings_page.dart';
 import 'package:smooth_app/themes/smooth_theme.dart';
 import 'package:smooth_app/themes/theme_provider.dart';
 import 'package:smooth_app/widgets/text_search_widget.dart';
-import 'package:smooth_ui_library/widgets/smooth_card.dart';
-import 'package:smooth_app/pages/settings_page.dart';
+import 'package:smooth_ui_library/smooth_ui_library.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage();
@@ -29,46 +29,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Widget> _pages = <Widget>[
-    const ProfilePage(),
-    const ScanPage(),
-    const OldHomePage(),
-  ];
-  int _currentPage = 1;
-
   @override
   Widget build(BuildContext context) {
-    // TODO(slava-sh): Add intro screen.
-    return Scaffold(
-      body: _pages[_currentPage],
-      bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        selectedItemColor: Colors.amber[800],
-        currentIndex: _currentPage,
-        onTap: _onTap,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Scan or Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-        ],
+    final List<SmoothBottomNavigationBarItem> items =
+        <SmoothBottomNavigationBarItem>[
+      SmoothBottomNavigationBarItem(
+        body: const ProfilePage(),
+        iconPath: 'assets/navigation/user.svg',
+        name: 'Profile',
       ),
+      SmoothBottomNavigationBarItem(
+        body: const OldHomePage(),
+        iconPath: 'assets/navigation/organize.svg',
+        name: 'History',
+      ),
+    ];
+    return SmoothBottomNavigationBar(
+      items,
+      fabAction: _openScanPage,
     );
   }
 
-  void _onTap(int index) {
-    setState(() {
-      _currentPage = index;
-    });
+  void _openScanPage() {
+    Navigator.push<Widget>(
+      context,
+      MaterialPageRoute<Widget>(
+        builder: (BuildContext context) => const ScanPage(),
+      ),
+    );
   }
 }
 
